@@ -6,30 +6,42 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1> Le Fil d'Actu Collaboratif</h1>
+  <h1>📰 Le Fil d'Actu Collaboratif</h1>
 
-  <div id="auth-section">
-    <h2>Connexion / Inscription</h2>
-    <input type="email" id="email" placeholder="Email">
-    <input type="password" id="password" placeholder="Mot de passe">
-    <button id="signup">S'inscrire</button>
-    <button id="login">Se connecter</button>
-    <button id="logout" style="display:none;">Se déconnecter</button>
-    <p id="user-email" style="font-weight: bold;"></p>
+  <!-- Auth -->
+  <div class="auth-container">
+    <div class="box">
+      <h2>Connexion</h2>
+      <input type="email" id="login-email" placeholder="Email">
+      <input type="password" id="login-password" placeholder="Mot de passe">
+      <button id="login" class="boutConnex">Se connecter</button>
+    </div>
+
+    <div class="box">
+      <h2>Inscription</h2>
+      <input type="email" id="signup-email" placeholder="Email">
+      <input type="password" id="signup-password" placeholder="Mot de passe">
+      <button id="signup" class="boutConnex">S'inscrire</button>
+    </div>
   </div>
 
+  <p id="status-message"></p>
 
-  <div id="post-section" style="display:none;">
-    <h2>Publier un message</h2>
-    <textarea id="message" placeholder="Écris quelque chose..."></textarea><br>
+  <div id="post-section">
+  <h2>Publier un message</h2>
+  <textarea id="message" placeholder="Écris quelque chose..."></textarea>
+  <div class="post-buttons">
     <button id="post">Envoyer</button>
+    <button id="logout">Se déconnecter</button>
   </div>
+</div>
 
-  
+
   <div id="messages-section">
-    <h2>Messages</h2>
+    <h2>🗂 Historique des messages</h2>
     <div id="messages"></div>
   </div>
+
   <script type="module" src="app.js"></script>
 </body>
 </html>

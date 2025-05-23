@@ -1,4 +1,4 @@
-// Import Firebase modules
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
 import {
   getAuth,
   createUserWithEmailAndPassword,
@@ -8,93 +8,116 @@ import {
 } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js";
 import {
   getFirestore,
+  collection,
+  addDoc,
+  serverTimestamp,
+  query,
+  orderBy,
+  onSnapshot
 } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
 
-  // Import the functions you need from the SDKs you need
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
-  // TODO: Add SDKs for Firebase products that you want to use
-  // https://firebase.google.com/docs/web/setup#available-libraries
+// Firebase config
+const firebaseConfig = {
+  apiKey: "AIzaSyCkaS4YCD_oKoluhpeVHuSu_g7tiYhDI3s",
+  authDomain: "le-fil-d-actu-collaboratif.firebaseapp.com",
+  projectId: "le-fil-d-actu-collaboratif",
+  storageBucket: "le-fil-d-actu-collaboratif.firebasestorage.app",
+  messagingSenderId: "6333401339",
+  databaseURL: "https://le-fil-d-actu-collaboratif-default-rtdb.europe-west1.firebasedatabase.app/",
+  appId: "1:6333401339:web:090b3d4ae4c792dab4085e",
+  measurementId: "G-MFB7076DJ2"
+};
 
-  // Your web app's Firebase configuration
-  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-  const firebaseConfig = {
-    apiKey: "AIzaSyCkaS4YCD_oKoluhpeVHuSu_g7tiYhDI3s",
-    authDomain: "le-fil-d-actu-collaboratif.firebaseapp.com",
-    projectId: "le-fil-d-actu-collaboratif",
-    storageBucket: "le-fil-d-actu-collaboratif.firebasestorage.app",
-    messagingSenderId: "6333401339",
-    appId: "1:6333401339:web:090b3d4ae4c792dab4085e",
-    measurementId: "G-MFB7076DJ2"
-  };
-
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// --- DOM Elements ---
-const emailInput = document.getElementById("email");
-const passwordInput = document.getElementById("password");
-const signupButton = document.getElementById("signup");
-const loginButton = document.getElementById("login");
-const logoutButton = document.getElementById("logout");
-const userEmailP = document.getElementById("user-email");
+// Références DOM
+const signupEmail = document.getElementById("signup-email");
+const signupPassword = document.getElementById("signup-password");
+const loginEmail = document.getElementById("login-email");
+const loginPassword = document.getElementById("login-password");
+
+const signupBtn = document.getElementById("signup");
+const loginBtn = document.getElementById("login");
+const logoutBtn = document.getElementById("logout");
+
 const postSection = document.getElementById("post-section");
+const statusMessage = document.getElementById("status-message");
+const messageInput = document.getElementById("message");
+const postBtn = document.getElementById("post");
+const messagesDiv = document.getElementById("messages");
 
-// --- INSCRIPTION ---
-signupButton.addEventListener("click", () => {
-  const email = emailInput.value;
-  const password = passwordInput.value;
-
+// INSCRIPTION
+signupBtn.addEventListener("click", () => {
+  const email = signupEmail.value;
+  const password = signupPassword.value;
   createUserWithEmailAndPassword(auth, email, password)
     .then(() => {
-      alert("Inscription réussie !");
-      emailInput.value = "";
-      passwordInput.value = "";
+      statusMessage.textContent = `✅ Inscription réussie : ${email}`;
+      signupEmail.value = "";
+      signupPassword.value = "";
     })
-    .catch((error) => alert(`Erreur lors de l'inscription : ${error.message}`));
+    .catch((err) => {
+      statusMessage.textContent = `❌ Erreur d'inscription : ${err.message}`;
+    });
 });
 
-// --- CONNEXION ---
-loginButton.addEventListener("click", () => {
-  const email = emailInput.value;
-  const password = passwordInput.value;
-
+// CONNEXION
+loginBtn.addEventListener("click", () => {
+  const email = loginEmail.value;
+  const password = loginPassword.value;
   signInWithEmailAndPassword(auth, email, password)
     .then(() => {
-      alert("Connexion réussie !");
-      emailInput.value = "";
-      passwordInput.value = "";
+      statusMessage.textContent = `✅ Connecté avec : ${email}`;
+      loginEmail.value = "";
+      loginPassword.value = "";
     })
-    .catch((error) =>
-      alert(`Erreur de connexion : ${error.message}`)
-    );
+    .catch((err) => {
+      statusMessage.textContent = `❌ Erreur de connexion : ${err.message}`;
+    });
 });
 
-// --- DÉCONNEXION ---
-logoutButton.addEventListener("click", () => {
-  signOut(auth)
-    .then(() => {
-      alert("Déconnexion réussie !");
-    })
-    .catch((error) => alert(`Erreur lors de la déconnexion : ${error.message}`));
+// DÉCONNEXION
+logoutBtn.addEventListener("click", () => {
+  signOut(auth).then(() => {
+    statusMessage.textContent = "👋 Déconnecté avec succès.";
+  });
 });
 
-// --- OBSERVER L'ÉTAT D'AUTHENTIFICATION ---
+// GESTION DE SESSION
 onAuthStateChanged(auth, (user) => {
   if (user) {
-    // Utilisateur connecté
-    userEmailP.textContent = `Connecté en tant que : ${user.email}`;
-    logoutButton.style.display = "inline-block";
-    signupButton.style.display = "none";
-    loginButton.style.display = "none";
     postSection.style.display = "block";
+    logoutBtn.style.display = "inline-block";
   } else {
-    // Utilisateur déconnecté
-    userEmailP.textContent = "";
-    logoutButton.style.display = "none";
-    signupButton.style.display = "inline-block";
-    loginButton.style.display = "inline-block";
     postSection.style.display = "none";
+    logoutBtn.style.display = "none";
   }
+});
+
+// ENVOI DE MESSAGE
+postBtn.addEventListener("click", async () => {
+  const user = auth.currentUser;
+  const text = messageInput.value.trim();
+  if (user && text) {
+    await addDoc(collection(db, "messages"), {
+      text,
+      email: user.email,
+      createdAt: serverTimestamp()
+    });
+    messageInput.value = "";
+  }
+});
+
+// AFFICHAGE DES MESSAGES (historique)
+const q = query(collection(db, "messages"), orderBy("createdAt", "desc"));
+onSnapshot(q, (snapshot) => {
+  messagesDiv.innerHTML = "";
+  snapshot.forEach(doc => {
+    const msg = doc.data();
+    const div = document.createElement("div");
+    div.innerHTML = `<strong>${msg.email}</strong><br>${msg.text}`;
+    messagesDiv.appendChild(div);
+  });
 });
